@@ -1,0 +1,35 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+# Python Virtual Environments
+.venv/
+venv/
+env/
+
+# Node/React Dependencies
+phishing-frontend/node_modules/
+
+# production
+# Build/Distribution Files
+phishing-frontend/build/
+phishing-frontend/dist/
+
+# misc
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Backend (Python) Artifacts
+__pycache__/
+*.py[cod]
+
+# Logs and Temporary Files
+*.log
+.env
+
+# Data & Artifacts
+# Exclude raw data, allow model artifacts
+phishing-backend/data/
+!phishing-backend/*.joblib
