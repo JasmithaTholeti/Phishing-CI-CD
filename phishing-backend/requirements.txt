@@ -1,0 +1,22 @@
+
+
+#--- Backend & API ---
+
+fastapi
+uvicorn
+python-multipart
+pydantic
+httpx
+requests
+
+#--- Data Processing ---
+
+pandas
+numpy
+
+#--- Machine Learning ---
+
+scikit-learn==1.3.2
+joblib
+mlflow
+ucimlrepo
