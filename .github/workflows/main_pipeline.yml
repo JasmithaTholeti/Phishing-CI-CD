@@ -76,5 +76,6 @@ jobs:
     - name: Build and Push Docker image
       run: |
         cd ..
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/phishing-backend:latest ./phishing-backend
-        docker push ${{ secrets.DOCKER_USERNAME }}/ph
+        # 🔥 FIX: Hardcoded 'jasmithat' to prevent variable mismatch errors
+        docker build -t jasmithat/phishing-backend:latest ./phishing-backend
+        docker push jasmithat/phishing-backend:latest
