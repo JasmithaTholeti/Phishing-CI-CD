@@ -1,85 +1,103 @@
 import pandas as pd
 import numpy as np
-import json
 import os
-import sys
-from scipy import stats
+import requests  # <--- You might need to pip install requests
+import json
 
 # Configuration
 LOG_FILE = 'prediction_log.csv'
-BASELINE_CONFIDENCE_THRESHOLD = 0.70  # If avg confidence drops below this, alert!
-MIN_SAMPLES_FOR_DRIFT = 10  # Need at least 10 logs to be statistically significant
+BASELINE_CONFIDENCE_THRESHOLD = 0.70
+MIN_SAMPLES_FOR_DRIFT = 10
+
+# GitHub Configuration (Replace these!)
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") # In production, use os.getenv('GITHUB_TOKEN')
+REPO_OWNER = "JasmithaTholeti"
+REPO_NAME = "Phishing_detection_CI-CD"
+WORKFLOW_ID = "ci.yml"  # The filename of your workflow
+
+def trigger_retraining():
+    """Triggers the GitHub Action Workflow via API"""
+    print("\n🚀 TRIGGERING AUTOMATED RETRAINING...")
+    
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/actions/workflows/{WORKFLOW_ID}/dispatches"
+    
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    data = {
+        "ref": "main"  # The branch you want to run
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 204:
+            print("✅ Successfully triggered GitHub Pipeline!")
+            print("   Check your Actions tab in a few seconds.")
+        else:
+            print(f"❌ Failed to trigger pipeline: {response.status_code}")
+            print(response.text)
+    except Exception as e:
+        print(f"❌ Error calling GitHub API: {e}")
 
 def check_drift():
     print("="*60)
     print("🔍 MODEL DRIFT MONITORING SYSTEM")
     print("="*60)
 
-    # 1. Load Logs
+    # ... (Loading Logic remains the same) ...
     if not os.path.exists(LOG_FILE):
-        print(f"❌ Error: Log file '{LOG_FILE}' not found.")
-        print("   -> Go to the website and run some predictions first!")
         return
 
     try:
         df_log = pd.read_csv(LOG_FILE)
-        print(f"✓ Loaded {len(df_log)} production logs.")
-    except Exception as e:
-        print(f"❌ Error reading logs: {e}")
+    except:
         return
 
-    # 2. Volume Check
     if len(df_log) < MIN_SAMPLES_FOR_DRIFT:
-        print(f"⚠️  Not enough data for drift detection.")
-        print(f"   Current: {len(df_log)} | Required: {MIN_SAMPLES_FOR_DRIFT}")
-        print("   -> Please generate more predictions on the website.")
+        print(f"⚠️  Not enough data ({len(df_log)} samples).")
         return
 
-    # 3. Parse Confidence (Handle potential string formatting)
-    # Confidence might be stored as strings "0.95" or floats 0.95
+    # Calculate Confidence
     try:
         df_log['confidence'] = pd.to_numeric(df_log['confidence'], errors='coerce')
         current_avg_conf = df_log['confidence'].mean()
-    except Exception as e:
-        print(f"⚠️ Could not calculate confidence stats: {e}")
+    except:
         current_avg_conf = 0
 
-    # 4. Check for "Concept Drift" (Model Uncertainty)
-    print("\n📊 STATISTICAL ANALYSIS")
-    print(f"   Average Model Confidence: {current_avg_conf:.4f}")
+    print(f"\n📊 Current Confidence: {current_avg_conf:.4f}")
     
+    # --- THE TRIGGER LOGIC ---
     if current_avg_conf < BASELINE_CONFIDENCE_THRESHOLD:
-        print(f"   🔴 ALERT: Model Confidence is LOW (< {BASELINE_CONFIDENCE_THRESHOLD})")
-        print("      The model is struggling to classify recent data.")
-        print("      Reason: New phishing patterns may have emerged.")
+        print(f"   🔴 ALERT: Drift Detected! Confidence is below {BASELINE_CONFIDENCE_THRESHOLD}")
+        
+        # AUTOMATICALLY TRIGGER RETRAINING
+        trigger_retraining()
+        
     else:
-        print(f"   ✅ Status: Healthy (High Confidence)")
-
-    # 5. Check for "Label Drift" (Output Distribution)
-    # Are we predicting way more Phishing than usual?
-    phishing_count = len(df_log[df_log['prediction'] == 'Phishing'])
-    safe_count = len(df_log[df_log['prediction'] == 'Safe'])
-    total = phishing_count + safe_count
-    
-    phishing_ratio = phishing_count / total
-    
-    print(f"\n📈 PREDICTION DISTRIBUTION")
-    print(f"   Phishing: {phishing_count} ({phishing_ratio:.1%})")
-    print(f"   Safe:     {safe_count} ({1-phishing_ratio:.1%})")
-
-    # A simple heuristic: If 100% of traffic is one class, something might be wrong
-    if phishing_ratio > 0.9 or phishing_ratio < 0.1:
-        print("   ⚠️  WARNING: Extreme Class Imbalance detected.")
-        print("      If this is real traffic, it's suspicious. Check the inputs.")
-
-    # 6. Input Type Breakdown
-    if 'input_type' in df_log.columns:
-        print("\n📧 INPUT SOURCES")
-        print(df_log['input_type'].value_counts().to_string())
-
-    print("\n" + "="*60)
-    print("✅ DRIFT CHECK COMPLETE")
-    print("="*60)
+        print(f"   ✅ Status: Healthy")
 
 if __name__ == "__main__":
     check_drift()
+```
+
+### Step 4: Verify your YAML
+Check your `.github/workflows/ci.yml`. Look at the top.
+Does it have `workflow_dispatch:`?
+
+```yaml
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}  # <--- THIS MUST BE HERE
+```
+*If this line exists, your pipeline allows manual/API triggers.*
+
+---
+
+### How to Test It
+1.  **Generate "Bad" Traffic:** Paste weird text into your app to lower the confidence score.
+2.  **Run the Script:**
+    ```powershell
+    python check_drift.py
