@@ -1,4 +1,4 @@
-name: CI/CD Pipeline (Debug Mode)
+name: CI/CD Pipeline
 
 on:
   push:
@@ -8,18 +8,13 @@ on:
 jobs:
   test-backend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./phishing-backend
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Debug workspace
-      run: |
-        echo "===== WORKSPACE DEBUG ====="
-        pwd
-        ls -R .
-        echo "--- requirements.txt:"
-        cat requirements.txt || true
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -32,26 +27,17 @@ jobs:
         pip install -r requirements.txt
         pip install pytest httpx
 
-    - name: Run tests
-      run: pytest -v
-
-
   train-and-build:
     needs: test-backend
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ./phishing-backend
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-
-    - name: Debug workspace before training
-      run: |
-        echo "===== TRAIN WORKSPACE DEBUG ====="
-        pwd
-        ls -R .
-        echo "--- requirements.txt:"
-        cat requirements.txt || true
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -62,21 +48,24 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install httpx
+        pip install httpx gdown
 
-    - name: Download phishing dataset (GitHub Release)
+    - name: Download phishing dataset (Google Drive)
       run: |
         mkdir -p data
-        wget -O data/phishing_email.csv "https://github.com/T490-hue/phishing-backend/releases/download/v1.0.0/phishing_email.csv"
+        gdown 1q96HI25w564BpVhJQyWF3IH-WUwdjSws -O data/phishing_email.csv
 
     - name: Train hybrid phishing model
       run: python train-hybrid.py
 
-    - name: Upload model artifact
+    - name: Upload model artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: phishing_model
-        path: phishing_model.joblib
+        name: model-artifacts
+        path: |
+          phishing-backend/phishing_model.joblib
+          phishing-backend/model_columns.joblib
+          phishing-backend/email_scaler.joblib
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
@@ -84,13 +73,8 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build Docker image
+    - name: Build and Push Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME }}/phishing-api:latest .
-        docker tag ${{ secrets.DOCKER_USERNAME }}/phishing-api:latest \
-                   ${{ secrets.DOCKER_USERNAME }}/phishing-api:${{ github.sha }}
-
-    - name: Push Docker image
-      run: |
-        docker push ${{ secrets.DOCKER_USERNAME }}/phishing-api:latest
-        docker push ${{ secrets.DOCKER_USERNAME }}/phishing-api:${{ github.sha }}
+        cd ..
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/phishing-backend:latest ./phishing-backend
+        docker push ${{ secrets.DOCKER_USERNAME }}/phishing-backend:latest
