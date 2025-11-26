@@ -15,7 +15,7 @@ MIN_SAMPLES_FOR_DRIFT = 10
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") 
 REPO_OWNER = "JasmithaTholeti"
 REPO_NAME = "Phishing_detection_CI-CD"
-WORKFLOW_ID = "main_pipeline.yml"  # Updated to match your new filename
+WORKFLOW_ID = "main_pipeline.yml"
 
 def trigger_retraining():
     """Triggers the GitHub Action Workflow via API"""
