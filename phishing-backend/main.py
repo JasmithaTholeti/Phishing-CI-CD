@@ -15,7 +15,7 @@ from typing import Optional, Dict, Any
 app = FastAPI(title="Hybrid Phishing Detection API", version="2.0")
 
 # CORS
-origins = ["http://localhost:3000"]
+origins = ["http://localhost:3000","https://phishing-detection-ci-cd.onrender.com"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
