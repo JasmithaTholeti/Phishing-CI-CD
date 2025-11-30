@@ -74,7 +74,7 @@ export default function App() {
       : { website_features: features };
 
     try {
-      const response = await fetch('${API_BASE_URL}/predict', {
+      const response = await fetch(`${API_BASE_URL}/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
