@@ -1,3 +1,4 @@
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 import React, { useState } from 'react';
 import { Shield, ShieldAlert, CheckCircle, Mail, Globe, Play, RotateCcw, Terminal, Zap } from 'lucide-react';
 
@@ -72,7 +73,7 @@ export default function App() {
       : { website_features: features };
 
     try {
-      const response = await fetch('http://localhost:8000/predict', {
+      const response = await fetch('${API_BASE_URL}/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
