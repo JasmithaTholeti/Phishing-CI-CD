@@ -65,31 +65,42 @@ export default function App() {
   };
 
   const handlePredict = async () => {
-    setLoading(true);
-    setError(null);
-    setResult(null);
+    setLoading(true);
+    setError(null);
+    setResult(null);
 
-    const payload = mode === 'email' 
-      ? { email_text: emailText } 
-      : { website_features: features };
+    const payload = mode === 'email' 
+      ? { email_text: emailText } 
+      : { website_features: features };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    try {
+      // === FIXED: Using backticks (`) for variable interpolation ===
+      const response = await fetch(`${API_BASE_URL}/predict`, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(payload), 
+      });
+      
+      // === ROBUSTNESS FIX: Check status code before reading JSON ===
+      // This prevents the "Unexpected end of JSON input" error
+      if (!response.ok) {
+        // If status is 4xx or 5xx, throw a descriptive error
+        const errorText = await response.text();
+        throw new Error(`API Error: ${response.status} - ${errorText.substring(0, 100)}`);
+      }
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
-      setResult(data);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to connect to backend. Is uvicorn running?");
-    } finally {
-      setLoading(false);
-    }
-  };
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      setResult(data);
+
+    } catch (err) {
+      console.error(err);
+      // Display the specific error thrown by the new check, or the fallback message
+      setError(err.message || "Failed to connect to backend. Is uvicorn running?"); 
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-blue-500/30">
