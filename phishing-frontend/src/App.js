@@ -1,6 +1,7 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 import React, { useState } from 'react';
 import { Shield, ShieldAlert, CheckCircle, Mail, Globe, Play, RotateCcw, Terminal, Zap } from 'lucide-react';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 // --- Tab Component ---
 const TabButton = ({ active, onClick, icon: Icon, label }) => (
