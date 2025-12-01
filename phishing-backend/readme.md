@@ -1,247 +1,160 @@
-Hybrid Phishing Detection System
+# Hybrid Phishing Detection Backend
 
-Email and Website Based Phishing Classification
-Version 2.0
+This directory contains the server-side logic for the Phishing Detection System. It features a **modular architecture** that separates Natural Language Processing (NLP) for emails and heuristic analysis for website URLs, exposed via a **FastAPI** server.
 
-Overview
+---
 
-This project builds and serves a hybrid phishing detection model that analyzes two types of inputs:
+## 📂 File Structure
 
-Website-based numerical features (UCI Phishing Websites Dataset)
+### 🧠 Core Logic & Training
 
-Email text–based phishing indicators (Phishing_Email.csv)
+The training pipeline has been decoupled into specialized scripts for better maintainability:
 
-The system combines both datasets into one unified training pipeline and produces a single machine-learning model that can detect phishing attempts from either source.
+* **`train_emails.py`**: Handles the NLP pipeline. It loads the email dataset, vectorizes text using TF-IDF, trains the email classifier, and saves `tfidf_vectorizer.joblib` and `phishing_model.joblib`.
+* **`train_websites.py`**: Handles the structural analysis. It processes the UCI website dataset, selects critical features, trains the website classifier, and saves `phishing_website_model.joblib` and `website_features.joblib`.
+* **`main.py`**: The production API server. It loads artifacts from both training pipelines to perform hybrid inference on incoming requests.
+* **`check_drift.py`**: The monitoring utility. It performs statistical analysis on `prediction_log.csv` to detect model drift and triggers automated retraining via GitHub Actions.
+* **`kafka.py`**: A simulation utility acting as a Kafka Consumer to demonstrate real-time stream processing and monitoring capabilities.
 
-The project includes:
+### ⚙️ Configuration & Infrastructure
 
-A hybrid training script (train-hybrid.py)
+* **`Dockerfile`**: Defines the environment for containerizing the application (`Python 3.10-slim` base).
+* **`requirements.txt`**: Lists all Python dependencies (pinned versions recommended for production).
+* **`prediction_log.csv`**: *(Generated at runtime)* Stores live prediction data for drift analysis.
 
-FastAPI backend for prediction (main_email.py)
+### 📦 Model Artifacts
 
-Dockerized API
+* `phishing_model.joblib`: The trained classifier for Email Text.
+* `phishing_website_model.joblib`: The trained classifier for Website Features.
+* `tfidf_vectorizer.joblib`: The NLP vectorizer for converting text to machine-readable numbers.
+* `website_features.joblib`: List of specific features used by the website model.
+* `important_features.joblib`: Stores feature importance rankings for explainability.
 
-CI/CD pipeline using GitHub Actions (ci.yml)
+---
 
-1. Project Structure
+## 🚀 Setup & Execution Guide
 
-phishing-backend/
-│
-├── main_email.py               # FastAPI application
-├── train-hybrid.py             # Hybrid model training script
-├── phishing_model.joblib       # Trained model (generated)
-├── model_columns.joblib        # Feature column order for prediction
-├── email_scaler.joblib         # Scaler for email features
-├── prediction_log.csv          # Saved logs of predictions
-├── requirements.txt
-├── Dockerfile
-└── .github/workflows/ci.yml    # GitHub Actions pipeline
+### Option 1: Running via Docker (Recommended)
 
-2. What Each File Does
-main_email.py (FastAPI App)
+This method ensures a consistent environment and avoids dependency conflicts.
 
-This file runs the API that accepts inputs and returns phishing predictions.
+1.  **Build the Image**
 
-Key features:
+    ```bash
+    docker build -t phishing-backend .
+    ```
 
-Two prediction endpoints:
+2.  **Run the Container**
+    > **Note:** The `GITHUB_TOKEN` is required for the automated retraining feature to work.
 
-/predict/website
+    ```bash
+    docker run -p 8000:8000 -e GITHUB_TOKEN="your_personal_access_token" phishing-backend
+    ```
 
-/predict/email
+### Option 2: Running Locally
 
-Extracts 20+ handcrafted email features
+1.  **Create & Activate Virtual Environment**
 
-Applies scaling and converts to -1, 0, 1 buckets
+    ```bash
+    # Windows
+    python -m venv .venv
+    .\.venv\Scripts\activate
 
-Reorders features exactly as the model was trained
+    # Linux/Mac
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
 
-Generates predictions with confidence scores
+2.  **Install Dependencies**
 
-Logs all predictions into prediction_log.csv
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-Provides Swagger docs at /docs
+3.  **Train the Models** (If artifacts are missing)
+    *You must run both scripts to generate all necessary `.joblib` files.*
 
-It does not include:
+    ```bash
+    python train_emails.py
+    python train_websites.py
+    ```
 
-Drift detection
+4.  **Verify Model Generation**
 
-Kafka streaming
+    ```bash
+    ls -lh *.joblib
+    echo "✓ All model files generated successfully"
+    ```
 
-Feedback training loop
+5.  **Start the API Server**
 
-You send a JSON request and get a clean JSON response.
+    ```bash
+    uvicorn main:app --reload
+    ```
 
+    The API will be available at `http://localhost:8000`.
 
+---
 
-train-hybrid.py (Hybrid Training Pipeline)
+## 📡 API Endpoints
 
-This script trains the hybrid phishing model using two datasets:
+### `POST /predict`
 
-UCI Website Dataset (numerical)
+The endpoint accepts a JSON payload containing either email text **OR** website features.
 
-Phishing Email Dataset (text → numerical features)
+| Payload Example (Email Mode) | Payload Example (Website Mode) |
+| :--- | :--- |
+| ```json { "email_text": "URGENT: Verify your account immediately at [http://bit.ly/fake-link](http://bit.ly/fake-link)" } ``` | ```json { "website_features": { "having_ip_address": 1, "sslfinal_state": -1, "url_length": 1, ... (other 27 features) } } ``` |
 
-Major steps:
+---
 
-Load UCI dataset using ucimlrepo
+## 🔍 Monitoring & Stream Simulation
 
-Load phishing_email.csv from data/
+### Drift Detection
 
-Extract features from email text (length, URLs, urgency, uppercase ratio, keywords, etc.)
+To check the health of the model and detect potential drift:
 
-Normalize email features using StandardScaler
+```bash
+python check_drift.py
+```
 
-Convert values into -1, 0, 1 buckets to match UCI dataset scale
+## 🔍 Monitoring & Stream Simulation
 
-Add a source_website indicator column
+### Kafka Stream Simulation
 
-Combine both datasets into one hybrid dataset
+To demonstrate real-time data processing (**Producer/Consumer** pattern) without full infrastructure overhead:
 
-Train three ML models:
+```bash
+python kafka.py
+```
 
-Logistic Regression
+## 🔄 CI/CD Pipeline Configuration
 
-Random Forest
+The project uses **GitHub Actions** for Continuous Integration and Deployment. To enable the Docker build and push steps, you must configure **Repository Secrets**.
 
-Gradient Boosting
+### 1. Required Secrets
 
-Select best model based on accuracy
+Go to **Settings** > **Secrets and variables** > **Actions** > **New repository secret** and add:
 
-Save:
+* `DOCKER_USERNAME`: Your Docker Hub username.
+* `DOCKER_PASSWORD`: Your Docker Hub Access Token (recommended) or password.
 
-phishing_model.joblib
+### 2. Workflow Definition
 
-model_columns.joblib
+The pipeline (defined in `.github/workflows/main_pipeline.yml`) automatically handles the build process using these secrets.
 
-email_scaler.joblib
+> **Note:** In your own fork, replace `your-docker-username` with your actual username in the Docker build step.
 
-The training script originally used MLflow, but MLflow was removed from Docker because it caused installation failures. It is still present for GitHub Actions usage only.
-
-
-
-.github/workflows/ci.yml (CI/CD Pipeline)
-
-This file creates a full automation pipeline that runs on every push to main.
-
-Pipeline steps:
-
-Checkout repository
-
-Print folder debug tree
-
-Install dependencies
-
-Run pytest tests
-
-Download phishing_email.csv from GitHub Releases
-
-Run train-hybrid.py
-
-Upload the trained model as an artifact
-
-Build Docker Image
-
-Login to Docker Hub
-
-Push image to Docker Hub
-
-Notes:
-
-mlflow must remain in requirements.txt for GitHub Actions to work.
-
-mlflow must be removed when building Docker locally.
-
-To run the CI/CD pipelines , run these commands:
-git add .
-git commit -m "update"
-git push origin main
-
-Once this is done Github reads the .yml file and triggers the CI/CD pipeline steps
-
-
-
-3. Commands Used During Development
-Running tests
-
-pytest -v
-
-Run backend locally 
-
-uvicorn main_email:app --reload --port 8000
-
-Rebuilding Docker image
-
-docker build -t joteena/phishing-api:latest .
-
-Running Docker container
-
-docker run -p 8000:8000 joteena/phishing-api:latest
-
-Sending request to Docker
-
-curl -X POST "http://localhost:8000/predict/email" \
-     -H "Content-Type: application/json" \
-     -d '{"email_text": "Congratulations, you won a free iPhone."}'
-
-
-4. GitHub Actions Notes
-
-To make GitHub Actions succeed:
-
-Keep mlflow in requirements.txt
-
-The pipeline downloads the dataset from:
-https://github.com/T490-hue/phishing-backend/releases/download/v1.0.0/phishing_email.csv
-
-
-5. Running the API
-
-Once Docker container starts:
-
-Swagger documentation is available at
-http://localhost:8000/docs
-
-
-6. Output Example
-
-POST /predict/email
-Input:
-
-{
-  "email_text": "Your account is suspended. Click here to verify."
-}
-
-
-Output:
-
-{
-  "prediction": "Phishing",
-  "confidence": "0.9821",
-  "is_phishing": 1,
-  "input_type": "email",
-  "analysis": {
-      "suspicious_keywords_found": 4,
-      "urls_found": 1,
-      "urgency_indicators": 1,
-      "financial_terms": 0,
-      "has_generic_greeting": false
-  }
-}
-7. Summary
-
-You built a full hybrid phishing detection system that:
-
-Combines two datasets (website + email)
-
-Extracts text-based phishing indicators
-
-Normalizes email features to match UCI dataset
-
-Trains a unified machine learning model
-
-Deploys using FastAPI
-
-Automates training and Docker image creation using GitHub Actions
-
-Serves predictions through a Dockerized API
+```yaml
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Build and Push Docker image
+        run: |
+          cd ..
+          # Replace 'your-docker-username' with your actual Docker Hub ID
+          docker build -t your-docker-username/phishing-backend:latest ./phishing-backend
+          docker push your-docker-username/phishing-backend:latest
