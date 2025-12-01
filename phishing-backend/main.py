@@ -5,41 +5,41 @@
 # import uvicorn
 
 # # --------------------------------------------------
-# # 🔥 FASTAPI APP
+# #  FASTAPI APP
 # # --------------------------------------------------
 # app = FastAPI(title="Email Phishing Detection API", version="1.0")
 
 # # --------------------------------------------------
-# # 🔥 ENABLE CORS (IMPORTANT to fix 405 error)
+# #  ENABLE CORS (IMPORTANT to fix 405 error)
 # # --------------------------------------------------
 # app.add_middleware(
 #     CORSMiddleware,
 #     allow_origins=["*"],              # allow all for now (you can restrict later)
 #     allow_credentials=True,
-#     allow_methods=["*"],              # ⭐ allows POST + OPTIONS (fixes your issue)
+#     allow_methods=["*"],              #  allows POST + OPTIONS (fixes your issue)
 #     allow_headers=["*"],
 # )
 
 # # --------------------------------------------------
-# # 🔥 LOAD MODEL + TF-IDF VECTORIZER
+# #  LOAD MODEL + TF-IDF VECTORIZER
 # # --------------------------------------------------
 # try:
 #     model = joblib.load("phishing_model.joblib")
 #     vectorizer = joblib.load("tfidf_vectorizer.joblib")
 #     print("✓ Model + Vectorizer Loaded Successfully")
 # except Exception as e:
-#     print(f"❌ Failed to load model/vectorizer: {e}")
+#     print(f" Failed to load model/vectorizer: {e}")
 #     model = None
 #     vectorizer = None
 
 # # --------------------------------------------------
-# # 🔥 INPUT FORMAT FOR API
+# #  INPUT FORMAT FOR API
 # # --------------------------------------------------
 # class EmailRequest(BaseModel):
 #     email_text: str
 
 # # --------------------------------------------------
-# # 🔥 MAIN PREDICTION ROUTE
+# #  MAIN PREDICTION ROUTE
 # # --------------------------------------------------
 # @app.post("/predict")
 # def predict_email(data: EmailRequest):
@@ -69,7 +69,7 @@
 #     }
 
 # # --------------------------------------------------
-# # 🔥 RUN SERVER
+# #  RUN SERVER
 # # --------------------------------------------------
 # if __name__ == "__main__":
 #     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
@@ -89,12 +89,12 @@ from collections import Counter
 from typing import Optional, Dict, List
 
 # --------------------------------------------------
-# 🔥 FASTAPI APP
+#  FASTAPI APP
 # --------------------------------------------------
 app = FastAPI(title="Phishing Detection API - Hybrid System", version="2.0")
 
 # --------------------------------------------------
-# 🔥 ENABLE CORS
+#  ENABLE CORS
 # --------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -105,7 +105,7 @@ app.add_middleware(
 )
 
 # --------------------------------------------------
-# 🔥 LOAD MODELS
+#  LOAD MODELS
 # --------------------------------------------------
 email_model = None
 email_vectorizer = None
@@ -118,7 +118,7 @@ try:
     email_vectorizer = joblib.load("tfidf_vectorizer.joblib")
     print("✓ Email Model + Vectorizer Loaded Successfully")
 except Exception as e:
-    print(f"⚠️  Email model not found: {e}")
+    print(f"  Email model not found: {e}")
 
 try:
     website_model = joblib.load("phishing_website_model.joblib")
@@ -129,10 +129,10 @@ try:
         important_features = website_features[:15]  # Default to first 15
     print("✓ Website Model + Features Loaded Successfully")
 except Exception as e:
-    print(f"⚠️  Website model not found: {e}")
+    print(f"  Website model not found: {e}")
 
 # --------------------------------------------------
-# 🔥 PHISHING DETECTION CONSTANTS
+#  PHISHING DETECTION CONSTANTS
 # --------------------------------------------------
 PHISHING_KEYWORDS = [
     'verify', 'account', 'update', 'secure', 'banking', 'login', 'signin',
@@ -145,7 +145,7 @@ LEGITIMATE_TLDS = ['com', 'org', 'net', 'edu', 'gov', 'mil', 'int']
 SUSPICIOUS_TLDS = ['tk', 'ml', 'ga', 'cf', 'gq', 'xyz', 'top', 'work', 'date', 'wang']
 
 # --------------------------------------------------
-# 🔥 HELPER FUNCTIONS FOR URL ANALYSIS
+#  HELPER FUNCTIONS FOR URL ANALYSIS
 # --------------------------------------------------
 def calculate_entropy(text):
     """Calculate Shannon entropy of text"""
@@ -377,7 +377,7 @@ def extract_url_features(url: str) -> Dict:
     return features
 
 # --------------------------------------------------
-# 🔥 INPUT MODELS
+#  INPUT MODELS
 # --------------------------------------------------
 class EmailRequest(BaseModel):
     email_text: str
@@ -389,7 +389,7 @@ class WebsiteFeaturesRequest(BaseModel):
     website_features: Dict[str, int]
 
 # --------------------------------------------------
-# 🔥 MAIN PREDICTION ROUTES
+#  MAIN PREDICTION ROUTES
 # --------------------------------------------------
 @app.get("/")
 def root():
@@ -552,7 +552,7 @@ def predict_website(data: WebsiteRequest):
     else:
         risk_level = "LOW"
     
-    # 🔥 FIX: Convert ALL numpy/non-serializable types to Python native types
+    #  FIX: Convert ALL numpy/non-serializable types to Python native types
     return {
         "prediction": str(result),
         "confidence": round(float(confidence), 4),
@@ -573,7 +573,7 @@ def predict_website(data: WebsiteRequest):
 # --------------------------------------------------
 if __name__ == "__main__":
     print("\n" + "="*60)
-    print("🚀 Starting Phishing Detection API - Hybrid System")
+    print(" Starting Phishing Detection API - Hybrid System")
     print("="*60)
     print(f"✓ Email Model: {'Loaded' if email_model else 'Not Found'}")
     print(f"✓ Website Model: {'Loaded' if website_model else 'Not Found'}")
