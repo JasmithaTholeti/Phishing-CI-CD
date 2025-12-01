@@ -200,34 +200,3 @@ for i, email in enumerate(test_emails, 1):
     print(f"\n{i}. {email}")
     print(f"   {result} ({conf:.1%} confidence)")
 
-# ============================================================================
-# INTERACTIVE MODE
-# ============================================================================
-print("\n" + "="*80)
-print("INTERACTIVE TESTING - Enter your email text")
-print("Type 'quit' to exit")
-print("="*80)
-
-while True:
-    user_input = input("\nEnter email text: ").strip()
-    
-    if user_input.lower() in ['quit', 'exit', 'q']:
-        print("\n✓ Thank you!")
-        break
-    
-    if not user_input:
-        continue
-    
-    vec = vectorizer.transform([user_input])
-    pred = best_model.predict(vec)[0]
-    prob = best_model.predict_proba(vec)[0]
-    
-    print("\n" + "="*80)
-    if pred == 1:
-        print(f"🚨 PHISHING DETECTED ({prob[1]:.1%} confidence)")
-        print("   NOT SAFE - Be careful with this email!")
-    else:
-        print(f"✅ LEGITIMATE ({prob[0]:.1%} confidence)")
-        print("   SAFE - This appears to be genuine")
-    print(f"   Score: {prob[1]:.1%} phishing | {prob[0]:.1%} legitimate")
-    print("="*80)
