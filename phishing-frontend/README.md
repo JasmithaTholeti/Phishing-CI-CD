@@ -1,70 +1,103 @@
-# Getting Started with Create React App
+# Phishing Detection Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This directory contains the client-side application for the Phishing Detection System. It is a single-page application (SPA) built with **React** that provides an interactive dashboard for the hybrid machine learning model.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 📖 Overview
 
-### `npm start`
+The frontend serves as the **presentation layer**, enabling users to interact with the backend API through two distinct modes:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+* **Email Text Analysis:** Accepts raw email content for NLP-based phishing detection.
+* **Website Feature Analysis:** Provides a togglable interface to configure 30 heuristic features (based on the UCI dataset) for structural analysis.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🛠️ Technical Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Category | Technology | Details |
+| :--- | :--- | :--- |
+| **Framework** | React.js | v18+ |
+| **Styling** | Tailwind CSS | Via CDN integration in `public/index.html` |
+| **Icons** | Lucide React | |
+| **State Management** | React Hooks | `useState` |
+| **Network** | Native Fetch API | |
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📋 Prerequisites
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Ensure the following are installed on your development machine:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* **Node.js:** Version 18.0.0 or higher
+* **npm:** Version 9.0.0 or higher (usually bundled with Node.js)
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🚀 Installation & Setup
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1.  **Navigate** to the frontend directory:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+    ```bash
+    cd phishing-frontend
+    ```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+2.  **Install** the required dependencies:
+    *This installs React, Lucide icons, and other necessary packages listed in `package.json`.*
 
-## Learn More
+    ```bash
+    npm install
+    ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 🏃‍♂️ Execution
 
-### Code Splitting
+To start the development server:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+npm start
+```
 
-### Analyzing the Bundle Size
+## 🔌 Configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Backend Connection
 
-### Making a Progressive Web App
+The application is hardcoded to communicate with the backend service at **`http://localhost:8000`**.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+* **Endpoint Used:** `POST /predict`
+* **Error Handling:** If the backend is unreachable, the UI will display a specific error message ("Failed to connect to backend").
 
-### Advanced Configuration
+> **Note:** Ensure the Backend (FastAPI) is running via Docker or locally on port **8000** before performing an analysis.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## 🖥️ Usage Guide
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### 1. Email Analysis Mode
 
-### `npm run build` fails to minify
+1.  Select the **"Email Text Analysis"** tab.
+2.  Paste the raw text of a suspicious email into the text area.
+3.  Click **Analyze Threat** to send the payload to the NLP model.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### 2. Website Feature Analysis Mode
+
+1.  Select the **"Website Feature Analysis"** tab.
+2.  Manually configure the 30 feature dropdowns (`1 = Legitimate`, `0 = Suspicious`, `-1 = Phishing`).
+3.  **Presets:** Use the **"Load Phishing"** or **"Load Safe"** buttons to auto-populate the form with known patterns for rapid testing without manual entry.
+
+---
+
+## ❓ Troubleshooting
+
+### Issue: "Failed to connect to backend"
+
+* **Cause:** The backend API is not running or is not accessible on port 8000.
+* **Resolution:** Ensure the Docker container or local Python process is active.
+    * **Docker:** `docker run -p 8000:8000 phishing-backend`
+    * **Local:** `uvicorn main:app --reload`
+
+### Issue: Styling looks broken / Plain HTML
+
+* **Cause:** Tailwind CSS failed to load.
+* **Resolution:** Check your internet connection. The project uses a CDN link in `public/index.html` to load Tailwind styles.
