@@ -112,7 +112,7 @@
 //     }
 //   };
 
-//   // 🔥 ADDED: Missing handlePredictURL function
+//   //  ADDED: Missing handlePredictURL function
 //   const handlePredictURL = async () => {
 //     setLoading(true);
 //     setError(null);
