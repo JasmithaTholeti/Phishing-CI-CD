@@ -79,5 +79,6 @@ jobs:
       - name: Build and Push Docker image
         run: |
           cd ..
-          docker build -t jasmithat/phishing-backend:latest ./phishing-backend
-          docker push jasmithat/phishing-backend:latest
+          # Replace 'your-docker-username' with your actual Docker Hub ID
+          docker build -t your-docker-username/phishing-backend:latest ./phishing-backend
+          docker push your-docker-username/phishing-backend:latest
