@@ -569,7 +569,7 @@ def predict_website(data: WebsiteRequest):
         "active_risk_factors": [str(k) for k, v in risk_factors.items() if int(v) > 0]
     }
 # --------------------------------------------------
-# 🔥 RUN SERVER
+#  RUN SERVER
 # --------------------------------------------------
 if __name__ == "__main__":
     print("\n" + "="*60)
