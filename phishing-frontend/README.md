@@ -100,4 +100,4 @@ The application is hardcoded to communicate with the backend service at **`http:
 ### Issue: Styling looks broken / Plain HTML
 
 * **Cause:** Tailwind CSS failed to load.
-* **Resolution:** Check your internet connection. The project uses a CDN link in `public/index.html` to load Tailwind styles.
+* **Resolution:** Check your internet connection.The project uses a CDN link in `public/index.html` to load Tailwind styles.
